@@ -48,23 +48,55 @@ function init() {
   scene.add(light);
 
   const loader = new GLTFLoader();
-  loader.load("./assets/smartphone/scene.gltf", function (gltf) {
-    smartphone = gltf.scene;
-    smartphone.position.set(0, -10, 300);
-    smartphone.scale.set(40, 40, 40);
 
-    scene.add(smartphone);
-    render();
+  let promiseModels1 = new Promise((resolve, reject) => {
+    loader.load("./assets/silver_smartphone/scene.gltf", function (gltf) {
+      duck = gltf.scene;
+      duck.name = "duck";
+      duck.position.set(-5, -30, 300);
+      duck.scale.set(100, 100, 100);
+      duck.visible = false;
+
+      // scene.add(duck);
+      // render();
+      resolve();
+    });
   });
 
-  loader.load("./assets/duck/duck.gltf", function (gltf) {
-    duck = gltf.scene;
-    duck.position.set(-5, -30, 300);
-    duck.scale.set(40, 40, 40);
-    duck.visible = false;
+  let promiseModels2 = new Promise((resolve, reject) => {
+    loader.load("./assets/smartphone/scene.gltf", function (gltf) {
+      smartphone = gltf.scene;
+      smartphone.position.set(0, -10, 300);
+      smartphone.scale.set(40, 40, 40);
 
+      gltf.scene.traverse(function (child) {
+        if (child instanceof THREE.Mesh) {
+          console.log(child);
+          child.geometry.needsUpdate = true;
+          for (
+            let index = 0;
+            index < child.geometry.attributes.position.count ;
+            index++
+          ) {
+            child.geometry.attributes.position[index] = 1.0;
+          }
+        }
+      });
+
+      // scene.add(smartphone);
+
+      // render();
+      resolve();
+    });
+  });
+
+  Promise.all([promiseModels1, promiseModels2]).then(() => {
+    let x = new THREE.Vector3();
     scene.add(duck);
+    scene.add(smartphone);
+    smartphone.getWorldPosition(x);
     render();
+    let y = scene.getObjectByName("duck");
   });
 
   // postprocessing
@@ -102,32 +134,32 @@ function onWindowResize() {
 }
 
 function render() {
-  console.log(edge);
-  if (smartphone) {
-    // smartphone.rotation.x += 0.5;
-    if (edgeDirection) {
-      smartphone.rotation.y += 0.01 + edge / 100;
-      duck.rotation.y += 0.01 + edge / 100;
-      edge += 0.22;
-    } else {
-      smartphone.rotation.y += 0.01 - edge / 100;
-      duck.rotation.y += 0.01 - edge / 100;
-      edge -= 0.22;
-    }
+  // console.log(edge);
+  // if (smartphone) {
+  //   // smartphone.rotation.x += 0.5;
+  //   if (edgeDirection) {
+  //     smartphone.rotation.y += 0.01 + edge / 100;
+  //     duck.rotation.y += 0.01 + edge / 100;
+  //     edge += 0.22;
+  //   } else {
+  //     smartphone.rotation.y += 0.01 - edge / 100;
+  //     duck.rotation.y += 0.01 - edge / 100;
+  //     edge -= 0.22;
+  //   }
 
-    if (edge >= 70) {
-      edgeDirection = false;
-      if (smartphone.visible && !duck.visible) {
-        smartphone.visible = !smartphone.visible;
-        duck.visible = !duck.visible;
-      } else {
-        smartphone.visible = !smartphone.visible;
-        duck.visible = !duck.visible;
-      }
-    } else if (edge <= 0) {
-      edgeDirection = true;
-    }
-  }
+  //   if (edge >= 70) {
+  //     edgeDirection = false;
+  //     if (smartphone.visible && !duck.visible) {
+  //       smartphone.visible = !smartphone.visible;
+  //       duck.visible = !duck.visible;
+  //     } else {
+  //       smartphone.visible = !smartphone.visible;
+  //       duck.visible = !duck.visible;
+  //     }
+  //   } else if (edge <= 0) {
+  //     edgeDirection = true;
+  //   }
+  // }
 
   // if (params.enable) {
   //   composer.render();
